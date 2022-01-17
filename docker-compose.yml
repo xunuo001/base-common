@@ -1,0 +1,10 @@
+version: '2.2'
+services:
+  base:
+    container_name: base
+    image: base:0.0.1
+#    network_mode: host
+#    extra_hosts:
+#      - "www.test.com:192.168.0.107"
+    ports:
+      - "8888:8888"

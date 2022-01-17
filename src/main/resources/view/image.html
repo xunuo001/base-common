@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<!--解决idea thymeleaf 表达式模板报红波浪线-->
+<!--suppress ALL -->
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="图片上传"></title>
+    <!-- 引入公用部分 -->
+    <style>
+        /*上下左右居中*/
+        .main {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 150px;
+        }
+    </style>
+</head>
+<body>
+<div class="main">
+    <form class="layui-form layui-form-pane" enctype="multipart/form-data" action="/image/base64" method="post">
+        <div class="layui-form-item">
+            <label class="layui-form-label">上传图片</label>
+            <div class="layui-input-block">
+                <input type="file" id="file" name="file" placeholder="请输入图片" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-input-block">
+                <input type="submit"  name="提交" >
+            </div>
+        </div>
+    </form>
+</div>
+</body>
+</html>

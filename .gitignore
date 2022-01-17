@@ -1,0 +1,4 @@
+.idea/
+.gradle/
+target/
+docker/jdk/jdk-linux-x64.tar.gz
