@@ -9,6 +9,8 @@ import cn.huanzi.qch.baseadmin.sys.sysshortcutmenu.vo.SysShortcutMenuVo;
 import cn.huanzi.qch.baseadmin.sys.sysuser.service.SysUserService;
 import cn.huanzi.qch.baseadmin.sys.sysuser.vo.SysUserVo;
 import cn.huanzi.qch.baseadmin.sys.sysusermenu.service.SysUserMenuService;
+import cn.huanzi.qch.baseadmin.sys.vcoin.service.VCoinService;
+import cn.huanzi.qch.baseadmin.sys.vcoin.vo.VCoinVo;
 import cn.huanzi.qch.baseadmin.util.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -71,7 +73,8 @@ class IndexController {
 
     @Autowired
     private RateLimiter rateLimiter;
-
+    @Autowired
+    private VCoinService vCoinService;
     @Value("${server.servlet.context-path:}")
     private String contextPath;
 
@@ -93,13 +96,13 @@ class IndexController {
                 SysSettingUtil.setSysSettingMap(sysSettingVo);
 
                 //判断OpenAPI限流开关是否开启
-                if("Y".equals(SysSettingUtil.getSysSetting().getSysOpenApiLimiterEncrypt())){
+                if ("Y".equals(SysSettingUtil.getSysSetting().getSysOpenApiLimiterEncrypt())) {
                     //令牌桶限流启动！
                     rateLimiter.star();
                 }
 
                 //获取本机内网IP
-                log.info("启动成功：{}","http://" + InetAddress.getLocalHost().getHostAddress() + ":" + port + contextPath);
+                log.info("启动成功：{}", "http://" + InetAddress.getLocalHost().getHostAddress() + ":" + port + contextPath);
             } catch (UnknownHostException e) {
                 //输出到日志文件中
                 log.error(ErrorUtil.errorInfoToString(e));
@@ -111,7 +114,7 @@ class IndexController {
      * 跳转登录页面
      */
     @GetMapping("loginPage")
-    public ModelAndView login(){
+    public ModelAndView login() {
         ModelAndView modelAndView = new ModelAndView("login");
 
         //系统信息
@@ -128,7 +131,7 @@ class IndexController {
      * 跳转首页
      */
     @GetMapping("")
-    public void index1(HttpServletResponse response){
+    public void index1(HttpServletResponse response) {
         //内部重定向
         try {
             response.sendRedirect("/index");
@@ -137,8 +140,9 @@ class IndexController {
             log.error(ErrorUtil.errorInfoToString(e));
         }
     }
+
     @GetMapping("index")
-    public ModelAndView index(){
+    public ModelAndView index() {
         ModelAndView modelAndView = new ModelAndView("index");
 
         //系统信息
@@ -147,16 +151,21 @@ class IndexController {
         //登录用户
         SysUserVo sysUserVo = sysUserService.findByLoginName(SecurityUtil.getLoginUser().getUsername()).getData();
         sysUserVo.setPassword(null);//隐藏部分属性
-        modelAndView.addObject( "loginUser", sysUserVo);
+        modelAndView.addObject("loginUser", sysUserVo);
 
         //登录用户系统菜单
         List<SysMenuVo> menuVoList = sysUserMenuService.findByUserId(sysUserVo.getUserId()).getData();
-        modelAndView.addObject("menuList",menuVoList);
+        modelAndView.addObject("menuList", menuVoList);
 
         //登录用户快捷菜单
-        List<SysShortcutMenuVo> shortcutMenuVoList= sysShortcutMenuService.findByUserId(sysUserVo.getUserId()).getData();
-        modelAndView.addObject("shortcutMenuList",shortcutMenuVoList);
-
+        List<SysShortcutMenuVo> shortcutMenuVoList = sysShortcutMenuService.findByUserId(sysUserVo.getUserId()).getData();
+        modelAndView.addObject("shortcutMenuList", shortcutMenuVoList);
+        VCoinVo vCoinVo= vCoinService.get(SecurityUtil.getLoginUser().getUsername()).getData();
+        long vCoinNum = 0;
+        if(vCoinVo!=null){
+            vCoinNum=vCoinVo.getCoinNum();
+        }
+        modelAndView.addObject("vCoinNum",vCoinNum);
         //后端公钥
         String publicKey = RsaUtil.getPublicKey();
         modelAndView.addObject("publicKey", publicKey);
@@ -192,7 +201,7 @@ class IndexController {
      */
     @GetMapping("monitor")
     public ModelAndView monitor() {
-        return new ModelAndView("monitor.html","port",port);
+        return new ModelAndView("monitor.html", "port", port);
     }
 
     /**
@@ -200,6 +209,6 @@ class IndexController {
      */
     @GetMapping("logging")
     public ModelAndView logging() {
-        return new ModelAndView("logging.html","port",port);
+        return new ModelAndView("logging.html", "port", port);
     }
 }

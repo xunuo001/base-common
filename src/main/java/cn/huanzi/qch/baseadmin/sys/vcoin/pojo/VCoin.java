@@ -13,8 +13,8 @@ import java.util.Date;
 @Data
 public class VCoin implements Serializable {
     @Id
-    private String userId;
-    private long  coinNum;
+    private String userName;
+    private Long  coinNum;
     private Date createTime;
     private Date updateTime;
 }

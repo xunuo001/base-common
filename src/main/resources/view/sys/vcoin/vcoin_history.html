@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<!--解决idea thymeleaf 表达式模板报红波浪线-->
+<!--suppress ALL -->
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <!-- 引入公用部分 -->
+    <script th:replace="common/head::static"></script>
+    <!-- 样式 -->
+    <link th:href="@{/sys/user/css/user.css}" rel="stylesheet" type="text/css"/>
+</head>
+<body>
+<div class="layui-row layui-col-space15">
+    <!-- 树 -->
+    <div class="layui-col-md6">
+        <div class="layui-card">
+            <div class="layui-card-header">消费列表</div>
+            <div class="layui-card-body">
+                <!-- 表格主体 -->
+                <table class="layui-hide" id="vCoinHistory" lay-filter="test"></table>
+                <!-- 模板 -->
+                <script type="text/html" id="vCoinTableToolbarDemo">
+                    <div class="layui-btn-container">
+                        <input type="text" id="queryByLoginName" name="queryByLoginName" autocomplete="off"
+                               placeholder="输入登陆名" class="layui-input layui-btn-sm">
+                        <button class="layui-btn layui-btn-sm" lay-event="query">查询<i class="layui-icon layui-icon-search"></i></button>
+                    </div>
+                </script>
+            </div>
+        </div>
+    </div>
+    <!-- 操作表单 -->
+</div>
+</body>
+<!-- js -->
+<script th:src="@{/sys/vcoin/js/vcoin_history.js}"></script>
+</html>
