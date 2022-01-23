@@ -64,9 +64,6 @@ public class VCoinIncrHistoryController extends CommonController<VCoinIncrHistor
         if (user == null) {
             return Result.of(null, false, "用户不存在");
         }
-        VCoinIncrHistoryVo preIncrHistory = new VCoinIncrHistoryVo();
-        preIncrHistory.setUserName(userName);
-        preIncrHistory.setType(vCoinVo.getType());
         Date preDate = vCoinIncrHistoryRepositroy.querybyUsernameAndType(userName, vCoinVo.getType());
         boolean isInTime = compareTime(preDate);
         if ("fat".equals(vCoinVo.getType()) && (!isInTime)) {
@@ -84,6 +81,9 @@ public class VCoinIncrHistoryController extends CommonController<VCoinIncrHistor
     }
 
     private boolean compareTime(Date date) {
+        if(date==null){
+            return false;
+        }
         long pre = date.getTime();
         long cur = new Date().getTime();
         return ((cur - pre )> time);

@@ -36,7 +36,12 @@ public class UserController {
         sysUserVo.setPassword(null);
         return new ModelAndView("user/userinfo", "user", sysUserVo);
     }
-
+    @GetMapping("info")
+    public Result<SysUserVo>  getUser() {
+        SysUserVo sysUserVo = sysUserService.findByLoginName(SecurityUtil.getLoginUser().getUsername()).getData();
+        sysUserVo.setPassword(null);
+        return Result.of(sysUserVo,true,"");
+    }
     @GetMapping("shortcMenu")
     public ModelAndView shortcMenu() {
         return new ModelAndView("user/shortcMenu");

@@ -3,6 +3,8 @@ package cn.huanzi.qch.baseadmin.author;
 import cn.huanzi.qch.baseadmin.config.security.UserDetailsServiceImpl;
 import cn.huanzi.qch.baseadmin.sys.sysuser.service.SysUserService;
 import cn.huanzi.qch.baseadmin.sys.sysuser.vo.SysUserVo;
+import cn.huanzi.qch.baseadmin.sys.sysuserauthority.service.SysUserAuthorityService;
+import cn.huanzi.qch.baseadmin.sys.sysuserauthority.vo.SysUserAuthorityVo;
 import cn.huanzi.qch.baseadmin.util.SecurityUtil;
 import cn.huanzi.qch.baseadmin.util.UUIDUtil;
 import com.alibaba.fastjson.JSONObject;
@@ -53,6 +55,8 @@ public class RestAuthController {
     private SysUserService sysUserService;
     @Autowired
     private UserDetailsServiceImpl userDetailsServiceImpl;
+    @Autowired
+    private SysUserAuthorityService sysUserAuthorityService;
 
     @RequestMapping("/render")
     @ResponseBody
@@ -68,41 +72,48 @@ public class RestAuthController {
      * oauth平台中配置的授权回调地址，以本项目为例，在创建github授权应用时的回调地址应为：http://127.0.0.1:8443/oauth/callback/github
      */
     @RequestMapping("/callback")
-    public ModelAndView login( AuthCallback callback, HttpServletRequest request,HttpServletResponse resp) {
+    public ModelAndView login(AuthCallback callback, HttpServletRequest request, HttpServletResponse resp) {
 
         AuthRequest authRequest = getAuthRequest();
         AuthResponse<AuthUser> response = authRequest.login(callback);
         log.info(JSONObject.toJSONString(response));
 
         if (response.ok()) {
-            AuthUser authUser= response.getData();
-            SysUserVo userVo=sysUserService.findByLoginName(authUser.getUsername()).getData();
-           if(userVo==null) {
+            AuthUser authUser = response.getData();
+            SysUserVo userVo = sysUserService.findByLoginName(authUser.getUsername()).getData();
+            if (userVo == null) {
                 userVo = new SysUserVo();
-               userVo.setUserId(UUIDUtil.getUuid());
-               userVo.setLoginName(authUser.getUuid());
-               userVo.setUserName(authUser.getNickname());
-               userVo.setCompany(authUser.getCompany());
-               userVo.setLocation(authUser.getLocation());
-               userVo.setEmail(authUser.getEmail());
-               userVo.setCreateTime(new Date());
-               userVo.setNewPassword("weixin");
-               sysUserService.save(userVo);
-           }
+                userVo.setUserId(UUIDUtil.getUuid());
+                userVo.setLoginName(authUser.getUuid());
+                userVo.setUserName(authUser.getNickname());
+                userVo.setCompany(authUser.getCompany());
+                userVo.setLocation(authUser.getLocation());
+                userVo.setEmail(authUser.getEmail());
+                userVo.setCreateTime(new Date());
+                userVo.setNewPassword("weixin");
+                sysUserService.save(userVo);
+                SysUserAuthorityVo auth = new SysUserAuthorityVo();
+                auth.setUserAuthorityId(UUIDUtil.getUuid());
+                auth.setCreateTime(new Date());
+                auth.setUpdateTime(new Date());
+                auth.setAuthorityId("1");
+                auth.setUserId(userVo.getUserId());
+                sysUserAuthorityService.save(auth);
+            }
             HttpSession session = request.getSession();
             securityUtil.sessionRegistryAddUser(session.getId(), userDetailsServiceImpl.loadUserByUsername(authUser.getUsername()));
 
             //保存登录信息
             User user = securityUtil.sessionRegistryGetUserBySessionId(session.getId());
-            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(user,user.getPassword(),user.getAuthorities());
+            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(user, user.getPassword(), user.getAuthorities());
             authentication.setDetails(new WebAuthenticationDetails(request));
 
             SecurityContext securityContext = SecurityContextHolder.getContext();
             securityContext.setAuthentication(authentication);
-            session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,securityContext);
+            session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, securityContext);
 
             //更新token信息
-            securityUtil.addRememberMe(request,resp,authUser.getUsername());
+            securityUtil.addRememberMe(request, resp, authUser.getUsername());
 
             //最后登录时间
             SysUserVo sysUserVo = sysUserService.findByLoginName(user.getUsername()).getData();
@@ -124,7 +135,7 @@ public class RestAuthController {
      * @return
      */
     private AuthRequest getAuthRequest() {
-       return new AuthWeChatOpenRequest(AuthConfig.builder()
+        return new AuthWeChatOpenRequest(AuthConfig.builder()
                 .clientId("")
                 .clientSecret("")
                 .redirectUri("/oauth/callback")

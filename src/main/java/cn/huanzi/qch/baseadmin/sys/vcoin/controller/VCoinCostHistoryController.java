@@ -3,6 +3,7 @@ package cn.huanzi.qch.baseadmin.sys.vcoin.controller;
 import cn.huanzi.qch.baseadmin.annotation.Decrypt;
 import cn.huanzi.qch.baseadmin.annotation.Encrypt;
 import cn.huanzi.qch.baseadmin.common.controller.CommonController;
+import cn.huanzi.qch.baseadmin.common.pojo.PageInfo;
 import cn.huanzi.qch.baseadmin.common.pojo.Result;
 import cn.huanzi.qch.baseadmin.constant.Constants;
 import cn.huanzi.qch.baseadmin.sys.sysuser.service.SysUserService;
@@ -44,6 +45,14 @@ public class VCoinCostHistoryController extends CommonController<VCoinCostHistor
     @Encrypt
     public Result<VCoinCostHistoryVo> cost(VCoinCostHistoryVo vCoinHistoryVo) {
         return vCoinCostHistroyService.cost(vCoinHistoryVo.getUserName(),vCoinHistoryVo);
+    }
+
+    @GetMapping("pages")
+    @Decrypt
+    @Encrypt
+    public Result<PageInfo<VCoinCostHistoryVo>> pages(VCoinCostHistoryVo entityVo) {
+        entityVo.setUserName(SecurityUtil.getLoginUser().getUsername());
+        return super.page(entityVo);
     }
 
 }
