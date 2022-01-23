@@ -2,6 +2,8 @@ package cn.huanzi.qch.baseadmin.util;
 
 import cn.huanzi.qch.baseadmin.config.security.MyPersistentTokenBasedRememberMeServices;
 import cn.huanzi.qch.baseadmin.config.security.SecurityConfig;
+import cn.huanzi.qch.baseadmin.sys.blacklist.service.BlackListService;
+import cn.huanzi.qch.baseadmin.sys.blacklist.vo.BlackListVo;
 import cn.huanzi.qch.baseadmin.sys.sysuser.service.SysUserService;
 import cn.huanzi.qch.baseadmin.sys.sysuser.vo.SysUserVo;
 import lombok.extern.slf4j.Slf4j;
@@ -46,7 +48,8 @@ public class SecurityUtil {
 
     @Autowired
     private SysUserService sysUserService;
-
+    @Autowired
+    private BlackListService blackListService;
     //认证数据源，URL/权限映射缓存
     public static Map<String, HashSet<ConfigAttribute>> urlAuthorityMap = new ConcurrentHashMap<>(150);
 
@@ -66,49 +69,50 @@ public class SecurityUtil {
     /**
      * 检查URL是否包含在“无需权限访问的URL”中
      */
-    public static boolean checkUrl(String requestUri){
+    public static boolean checkUrl(String requestUri) {
         //对/进行特殊处理
-        if("/".equals(requestUri) && !Arrays.asList(SecurityConfig.MATCHERS_PERMITALL_URL).contains(requestUri)){
+        if ("/".equals(requestUri) && !Arrays.asList(SecurityConfig.MATCHERS_PERMITALL_URL).contains(requestUri)) {
             return false;
         }
 
         String[] requestUris = requestUri.split("/");
         for (int i = 0; i < SecurityConfig.MATCHERS_PERMITALL_URL.length; i++) {
-            if(check(requestUris,SecurityConfig.MATCHERS_PERMITALL_URL[i].split("/"))){
+            if (check(requestUris, SecurityConfig.MATCHERS_PERMITALL_URL[i].split("/"))) {
                 return true;
             }
         }
 
         return false;
     }
-    private static boolean check(String[] requestUris,String[] urls){
+
+    private static boolean check(String[] requestUris, String[] urls) {
         for (int i1 = 0; i1 < requestUris.length; i1++) {
             //判断长度
-            if (i1 >= urls.length){
+            if (i1 >= urls.length) {
                 return false;
             }
 
             //处理/*、/**情况
-            if("**".equals(urls[i1])){
+            if ("**".equals(urls[i1])) {
                 return true;
             }
-            if("*".equals(urls[i1])){
+            if ("*".equals(urls[i1])) {
                 continue;
             }
 
             //处理带后缀
-            if(requestUris[i1].contains(".") && urls[i1].contains(".")){
+            if (requestUris[i1].contains(".") && urls[i1].contains(".")) {
                 String[] split = requestUris[i1].split("\\.");
                 String[] split2 = urls[i1].split("\\.");
 
                 // *.后缀的情况
-                if("*".equals(split2[0]) && split[1].equals(split2[1])){
+                if ("*".equals(split2[0]) && split[1].equals(split2[1])) {
                     return true;
                 }
             }
 
             //不相等
-            if(!requestUris[i1].equals(urls[i1])){
+            if (!requestUris[i1].equals(urls[i1])) {
                 return false;
             }
 
@@ -120,7 +124,7 @@ public class SecurityUtil {
     /**
      * 检查用户登录限制
      */
-    public Map<String,Object> checkUserByUserData(HttpServletRequest httpServletRequest,String userName){
+    public Map<String, Object> checkUserByUserData(HttpServletRequest httpServletRequest, String userName) {
         SysUserVo sysUserVo = sysUserService.findByLoginName(userName).getData();
 
         //默认登陆成功
@@ -129,20 +133,25 @@ public class SecurityUtil {
 
         //登陆IP不在白名单
         String ipAddr = IpUtil.getIpAddr(httpServletRequest);
+        BlackListVo bv = blackListService.get(ipAddr).getData();
+        if (bv != null) {
+            msg = "{\"code\":\"400\",\"msg\":\"登陆IP在黑名单，请联系管理员\"}";
+            flag = true;
+        }
         String limitedIp = sysUserVo.getLimitedIp();
-        if(!StringUtils.isEmpty(limitedIp) && !Arrays.asList(limitedIp.split(",")).contains(ipAddr)){
+        if (!StringUtils.isEmpty(limitedIp) && !Arrays.asList(limitedIp.split(",")).contains(ipAddr)) {
             msg = "{\"code\":\"400\",\"msg\":\"登陆IP不在白名单，请联系管理员\"}";
             flag = true;
         }
 
         //禁止多人在线
-        if("N".equals(sysUserVo.getLimitMultiLogin()) &&  sessionRegistryGetUserByUserName(userName) != null){
+        if ("N".equals(sysUserVo.getLimitMultiLogin()) && sessionRegistryGetUserByUserName(userName) != null) {
             msg = "{\"code\":\"400\",\"msg\":\"该账号禁止多人在线，请联系管理员\"}";
             flag = true;
         }
 
         //超出有效时间
-        if(!StringUtils.isEmpty(sysUserVo.getExpiredTime()) && System.currentTimeMillis() > sysUserVo.getExpiredTime().getTime()){
+        if (!StringUtils.isEmpty(sysUserVo.getExpiredTime()) && System.currentTimeMillis() > sysUserVo.getExpiredTime().getTime()) {
             msg = "{\"code\":\"400\",\"msg\":\"该账号已失效，请联系管理员\"}";
             flag = true;
 
@@ -151,7 +160,7 @@ public class SecurityUtil {
         }
 
         //禁止登陆系统
-        if("N".equals(sysUserVo.getValid())){
+        if ("N".equals(sysUserVo.getValid())) {
             msg = "{\"code\":\"400\",\"msg\":\"该账号已被禁止登陆系统，请联系管理员\"}";
             flag = true;
 
@@ -160,42 +169,43 @@ public class SecurityUtil {
         }
 
         //校验不通过
-        if(flag){
+        if (flag) {
             //清除保存的登录信息
             SecurityContextHolder.clearContext();
             httpServletRequest.getSession().removeAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);
         }
 
-        HashMap<String,Object> hashMap = new HashMap<>(2);
-        hashMap.put("flag",flag);
-        hashMap.put("msg",msg);
+        HashMap<String, Object> hashMap = new HashMap<>(2);
+        hashMap.put("flag", flag);
+        hashMap.put("msg", msg);
         return hashMap;
     }
 
 
 
     /*    remember-me相关操作     */
+
     /**
      * 清除remember-me持久化tokens
      * PS：清除用户所有的token记录
      */
-    public void rememberMeRemoveUserTokensByUserName(String userName){
+    public void rememberMeRemoveUserTokensByUserName(String userName) {
         persistentTokenRepository.removeUserTokens(userName);
     }
 
     /**
      * 根据series删除token记录
      */
-    public void rememberMeRemoveUserTokensBySeries(String series){
+    public void rememberMeRemoveUserTokensBySeries(String series) {
         //强制转换成JdbcTokenRepositoryImpl类，调用自定义sql进行删除
-        JdbcTokenRepositoryImpl jdbcTokenRepositoryImpl = (JdbcTokenRepositoryImpl)persistentTokenRepository;
+        JdbcTokenRepositoryImpl jdbcTokenRepositoryImpl = (JdbcTokenRepositoryImpl) persistentTokenRepository;
         jdbcTokenRepositoryImpl.getJdbcTemplate().update("delete from persistent_logins where series = ?", new Object[]{series});
     }
 
     /**
      * 根据rememberMeCookie查询获取数据表中的信息
      */
-    public PersistentRememberMeToken rememberMeGetTokenForSeries(Cookie rememberMeCookie){
+    public PersistentRememberMeToken rememberMeGetTokenForSeries(Cookie rememberMeCookie) {
         return rememberMeCookie == null ? null : persistentTokenRepository.getTokenForSeries(SecurityUtil.decodeCookie(rememberMeCookie.getValue())[0]);
     }
 
@@ -205,7 +215,7 @@ public class SecurityUtil {
      */
     public static String[] decodeCookie(String cookieValue) throws InvalidCookieException {
         StringBuilder cookieValueBuilder = new StringBuilder(cookieValue);
-        for(int j = 0; j < cookieValueBuilder.length() % 4; ++j) {
+        for (int j = 0; j < cookieValueBuilder.length() % 4; ++j) {
             cookieValueBuilder.append("=");
         }
         cookieValue = cookieValueBuilder.toString();
@@ -219,7 +229,7 @@ public class SecurityUtil {
         String cookieAsPlainText = new String(Base64.getDecoder().decode(cookieValue.getBytes()));
         String[] tokens = StringUtils.delimitedListToStringArray(cookieAsPlainText, ":");
 
-        for(int i = 0; i < tokens.length; ++i) {
+        for (int i = 0; i < tokens.length; ++i) {
             try {
                 tokens[i] = URLDecoder.decode(tokens[i], StandardCharsets.UTF_8.toString());
             } catch (UnsupportedEncodingException var6) {
@@ -233,9 +243,9 @@ public class SecurityUtil {
     /**
      * 获取 remember-me cookie
      */
-    public static Cookie getRememberMeCookie(HttpServletRequest request){
+    public static Cookie getRememberMeCookie(HttpServletRequest request) {
         Cookie[] cookies = request.getCookies();
-        if(cookies != null){
+        if (cookies != null) {
             for (Cookie cookie : cookies) {
                 if (AbstractRememberMeServices.SPRING_SECURITY_REMEMBER_ME_COOKIE_KEY.equals(cookie.getName())) {
                     return cookie;
@@ -248,22 +258,22 @@ public class SecurityUtil {
     /**
      * 删除 remember-me cookie
      */
-    public void removeRememberMeCookie(HttpServletRequest request,HttpServletResponse response){
+    public void removeRememberMeCookie(HttpServletRequest request, HttpServletResponse response) {
         //清除remember-me持久化token，删除自己
         Cookie rememberMeCookie = SecurityUtil.getRememberMeCookie(request);
-        if(rememberMeCookie != null){
+        if (rememberMeCookie != null) {
             String series = SecurityUtil.decodeCookie(rememberMeCookie.getValue())[0];
             rememberMeRemoveUserTokensBySeries(series);
         }
 
         //清除cookie
-        myPersistentTokenBasedRememberMeServices.removeCookie(request,response);
+        myPersistentTokenBasedRememberMeServices.removeCookie(request, response);
     }
 
     /**
      * 创建remember-me相关数据
      */
-    public void addRememberMe(HttpServletRequest request, HttpServletResponse response,String username){
+    public void addRememberMe(HttpServletRequest request, HttpServletResponse response, String username) {
         PersistentRememberMeToken persistentToken = new PersistentRememberMeToken(username, myPersistentTokenBasedRememberMeServices.generateSeriesData(), myPersistentTokenBasedRememberMeServices.generateTokenData(), new Date());
         persistentTokenRepository.createNewToken(persistentToken);
         myPersistentTokenBasedRememberMeServices.addCookie(persistentToken, request, response);
@@ -272,7 +282,7 @@ public class SecurityUtil {
     /**
      * 更新remember-me相关数据
      */
-    public void updateRememberMeByToken(HttpServletRequest request, HttpServletResponse response,PersistentRememberMeToken token){
+    public void updateRememberMeByToken(HttpServletRequest request, HttpServletResponse response, PersistentRememberMeToken token) {
         PersistentRememberMeToken newToken = new PersistentRememberMeToken(token.getUsername(), token.getSeries(), myPersistentTokenBasedRememberMeServices.generateTokenData(), new Date());
         persistentTokenRepository.updateToken(newToken.getSeries(), newToken.getTokenValue(), newToken.getDate());
         myPersistentTokenBasedRememberMeServices.addCookie(newToken, request, response);
@@ -281,12 +291,13 @@ public class SecurityUtil {
 
 
     /*  SessionRegistry相关操作  */
+
     /**
      * 根据sessionId从sessionRegistry获取用户
      */
-    public User sessionRegistryGetUserBySessionId(String sessionId){
+    public User sessionRegistryGetUserBySessionId(String sessionId) {
         SessionInformation sessionInformation = sessionRegistry.getSessionInformation(sessionId);
-        if(sessionInformation != null){
+        if (sessionInformation != null) {
             return (User) sessionInformation.getPrincipal();
         }
         return null;
@@ -295,10 +306,10 @@ public class SecurityUtil {
     /**
      * 根据userName从sessionRegistry获取用户
      */
-    public User sessionRegistryGetUserByUserName(String userName){
+    public User sessionRegistryGetUserByUserName(String userName) {
         for (Object principal : sessionRegistry.getAllPrincipals()) {
             User user = (User) principal;
-            if(user.getUsername().equals(userName)){
+            if (user.getUsername().equals(userName)) {
                 return user;
             }
         }
@@ -308,7 +319,7 @@ public class SecurityUtil {
     /**
      * 根据User从sessionRegistry剔除所有登录用户
      */
-    public void sessionRegistryRemoveUserByUser(User user){
+    public void sessionRegistryRemoveUserByUser(User user) {
         List<SessionInformation> allSessions = sessionRegistry.getAllSessions(user, true);
         if (allSessions != null) {
             for (SessionInformation sessionInformation : allSessions) {
@@ -323,12 +334,12 @@ public class SecurityUtil {
     /**
      * 根据sessionId从sessionRegistry剔除当前登录用户
      */
-    public void sessionRegistryRemoveUserByRequest(HttpServletRequest request){
+    public void sessionRegistryRemoveUserByRequest(HttpServletRequest request) {
         String sessionId = request.getRequestedSessionId();
 
         SessionInformation sessionInformation = sessionRegistry.getSessionInformation(sessionId);
 
-        if(sessionInformation == null){
+        if (sessionInformation == null) {
             return;
         }
         sessionInformation.expireNow();
@@ -341,7 +352,7 @@ public class SecurityUtil {
     /**
      * 根据userName从sessionRegistry中删除user
      */
-    public void sessionRegistryRemoveUserByUserName(String userName){
+    public void sessionRegistryRemoveUserByUserName(String userName) {
         User user = sessionRegistryGetUserByUserName(userName);
         sessionRegistryRemoveUserByUser(user);
     }
@@ -349,11 +360,11 @@ public class SecurityUtil {
     /**
      * 向sessionRegistry注册user
      */
-    public void sessionRegistryAddUser(String sessionId, Object user){
-        sessionRegistry.registerNewSession(sessionId,user);
+    public void sessionRegistryAddUser(String sessionId, Object user) {
+        sessionRegistry.registerNewSession(sessionId, user);
     }
 
-    public List<Object> sessionRegistryGetAllPrincipals(){
+    public List<Object> sessionRegistryGetAllPrincipals() {
         return sessionRegistry.getAllPrincipals();
     }
 }

@@ -184,3 +184,12 @@ CREATE TABLE `vcoin_cost_history`
     `type`     varchar(25) CHARACTER SET utf8 COLLATE utf8_general_ci  NOT NULL COMMENT '消费类型',
     PRIMARY KEY (`id`) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '消费历史表' ROW_FORMAT = Compact;
+
+DROP TABLE IF EXISTS `black_list`;
+CREATE TABLE `black_list`
+(
+    `ip`            varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '黑名单ip',
+    PRIMARY KEY (`ip`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '黑名单表' ROW_FORMAT = Compact;
+
+
