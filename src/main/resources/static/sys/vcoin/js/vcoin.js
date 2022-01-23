@@ -10,7 +10,7 @@ layui.use(['layer'], function () {
 function updateVCoin() {
     let vcoinForm = $("#vcoinForm").serializeObject();
     vcoinForm.updateTime = commonUtil.getNowTime();
-    $.post(ctx + "/vcoin/incr", vcoinForm, function (data) {
+    $.post(ctx + "/vcoin/incr/increase", vcoinForm, function (data) {
 
         if(!data.flag){
 
@@ -25,7 +25,7 @@ function updateVCoin() {
 
 function costVCoin() {
     let vcoinForm = $("#vcoinForm").serializeObject();
-    $.post(ctx + "/vcoin/history/cost", vcoinForm, function (data) {
+    $.post(ctx + "/vcoin/cost", vcoinForm, function (data) {
 
         if(!data.flag){
 

@@ -6,9 +6,10 @@ import java.io.Serializable;
 import java.util.Date;
 
 @Data
-public class VCoinVo implements Serializable {
+public class VCoinIncrHistoryVo implements Serializable {
+    private String id;
     private String userName;
     private Long coinNum;
+    private String type;
     private Date createTime;
-    private Date updateTime;
 }

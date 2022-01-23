@@ -9,11 +9,10 @@ import java.io.Serializable;
 import java.util.Date;
 
 @Data
-public class VCoinHistoryVo extends PageCondition implements Serializable {
-    private String Id;
-    @Like
+public class VCoinCostHistoryVo extends PageCondition implements Serializable {
+    private String id;
     private String userName;
-    private Long costCoinNum;
-    private Date costTime;
-    private String costType;
+    private Long coinNum;
+    private String type;
+    private Date createTime;
 }

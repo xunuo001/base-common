@@ -47,6 +47,31 @@
                         </div>
                     </div>
                     <div class="layui-form-item">
+                        <label class="layui-form-label">公司</label>
+                        <div class="layui-input-block">
+                            <input type="text" name="company" th:value="${user.company}" autocomplete="off"
+                                   placeholder="公司"
+                                   class="layui-input" readonly="readonly" disabled="disabled">
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">邮箱</label>
+                        <div class="layui-input-block">
+                            <input type="text" name="email" th:value="${user.email}" autocomplete="off"
+                                   placeholder="邮箱"
+                                   class="layui-input" readonly="readonly" disabled="disabled">
+                        </div>
+                    </div>
+
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">地址</label>
+                        <div class="layui-input-block">
+                            <input type="text" name="location" th:value="${user.location}" autocomplete="off"
+                                   placeholder="地址"
+                                   class="layui-input" readonly="readonly" disabled="disabled">
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
                         <label class="layui-form-label">是否允许登录系统（软删除）</label>
                         <div class="layui-input-block">
                             <input type="radio" name="valid" th:attr="checked=${user.valid == 'Y' ? true : false}"
@@ -125,6 +150,7 @@
                         </div>
                     </div>
                     <!-- 隐藏域 -->
+                    <input type="text" name="coinNum" th:value="${user.coinNum}" hidden="hidden"/>
                     <input type="text" name="userId" hidden="hidden"/>
                 </form>
             </div>

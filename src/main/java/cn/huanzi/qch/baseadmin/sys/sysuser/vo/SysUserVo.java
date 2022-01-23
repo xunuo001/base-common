@@ -18,7 +18,10 @@ public class SysUserVo extends PageCondition implements Serializable {
 
     private String password;//登录密码
     private String phone;//手机号
-
+    private String company;
+    private String location;
+    private String email;
+    private Long coinNum;
     private String valid;//软删除标识，Y/N
 
     private String limitedIp;//限制允许登录的IP集合

@@ -15,7 +15,7 @@ import java.util.List;
  */
 public interface CommonService<V, E,T> {
 
-    Result<PageInfo<V>> page(V entityVo);
+    Result<PageInfo<V>>  page(V entityVo);
 
     Result<List<V>> list(V entityVo);
 

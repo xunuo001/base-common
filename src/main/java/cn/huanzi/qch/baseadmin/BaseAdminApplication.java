@@ -9,8 +9,8 @@ import cn.huanzi.qch.baseadmin.sys.sysshortcutmenu.vo.SysShortcutMenuVo;
 import cn.huanzi.qch.baseadmin.sys.sysuser.service.SysUserService;
 import cn.huanzi.qch.baseadmin.sys.sysuser.vo.SysUserVo;
 import cn.huanzi.qch.baseadmin.sys.sysusermenu.service.SysUserMenuService;
-import cn.huanzi.qch.baseadmin.sys.vcoin.service.VCoinService;
-import cn.huanzi.qch.baseadmin.sys.vcoin.vo.VCoinVo;
+import cn.huanzi.qch.baseadmin.sys.vcoin.service.VCoinIncrHistoryService;
+import cn.huanzi.qch.baseadmin.sys.vcoin.vo.VCoinIncrHistoryVo;
 import cn.huanzi.qch.baseadmin.util.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -74,7 +74,7 @@ class IndexController {
     @Autowired
     private RateLimiter rateLimiter;
     @Autowired
-    private VCoinService vCoinService;
+    private VCoinIncrHistoryService vCoinService;
     @Value("${server.servlet.context-path:}")
     private String contextPath;
 
@@ -160,10 +160,10 @@ class IndexController {
         //登录用户快捷菜单
         List<SysShortcutMenuVo> shortcutMenuVoList = sysShortcutMenuService.findByUserId(sysUserVo.getUserId()).getData();
         modelAndView.addObject("shortcutMenuList", shortcutMenuVoList);
-        VCoinVo vCoinVo= vCoinService.get(SecurityUtil.getLoginUser().getUsername()).getData();
-        long vCoinNum = 0;
+        VCoinIncrHistoryVo vCoinVo= vCoinService.get(SecurityUtil.getLoginUser().getUsername()).getData();
+        Long vCoinNum = 0L;
         if(vCoinVo!=null){
-            vCoinNum=vCoinVo.getCoinNum();
+            vCoinNum=sysUserVo.getCoinNum();
         }
         modelAndView.addObject("vCoinNum",vCoinNum);
         //后端公钥

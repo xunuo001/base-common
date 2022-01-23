@@ -9,12 +9,13 @@ import java.io.Serializable;
 import java.util.Date;
 
 @Entity
-@Table(name = "vcoin")
+@Table(name = "vcoin_cost_history")
 @Data
-public class VCoin implements Serializable {
+public class VCoinCostHistory implements Serializable {
     @Id
+    private String id;
     private String userName;
-    private Long  coinNum;
+    private Long coinNum;
     private Date createTime;
-    private Date updateTime;
+    private String type;
 }

@@ -4,6 +4,6 @@ import lombok.Data;
 
 @Data
 public class ImageVo {
-    private Long vCoinNum;
+    private Long coinNum;
     private String base64;
 }

@@ -12,7 +12,7 @@ layui.use(['element', 'form', 'table', 'layer', 'laydate', 'tree', 'util'], func
     //用户列表
     tableIns = table.render({
         elem: '#vCoinHistory'
-        , url: ctx + '/vcoin/history/page'
+        , url: ctx + '/vcoin/cost/page'
         , method: 'POST'
         //请求前参数处理
         , request: {
@@ -42,9 +42,9 @@ layui.use(['element', 'form', 'table', 'layer', 'laydate', 'tree', 'util'], func
             {field: 'id', title: 'ID', hide: true}
             , {field: 'userName', title: '用户名称'}
 
-            , {field: 'costType', title: '消费类型'}
-            , {field: 'costCoinNum', title: '消费数量'}
-            , {field: 'costTime', title: '消费时间'}
+            , {field: 'type', title: '消费类型'}
+            , {field: 'coinNum', title: '消费数量'}
+            , {field: 'createTime', title: '消费时间'}
         ]]
         , defaultToolbar: ['', '', '']
         , page: true
