@@ -1,6 +1,7 @@
 package cn.huanzi.qch.baseadmin.author;
 
 import cn.huanzi.qch.baseadmin.config.security.UserDetailsServiceImpl;
+import cn.huanzi.qch.baseadmin.constant.Constants;
 import cn.huanzi.qch.baseadmin.sys.sysuser.service.SysUserService;
 import cn.huanzi.qch.baseadmin.sys.sysuser.vo.SysUserVo;
 import cn.huanzi.qch.baseadmin.sys.sysuserauthority.service.SysUserAuthorityService;
@@ -136,9 +137,9 @@ public class RestAuthController {
      */
     private AuthRequest getAuthRequest() {
         return new AuthWeChatOpenRequest(AuthConfig.builder()
-                .clientId("")
-                .clientSecret("")
-                .redirectUri("/oauth/callback")
+                .clientId(Constants.wxClientId)
+                .clientSecret(Constants.wxSecurityId)
+                .redirectUri("http://magicface.xyz:8888/oauth/callback")
                 .build());
     }
 }
