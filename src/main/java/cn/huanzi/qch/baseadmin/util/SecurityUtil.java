@@ -21,6 +21,7 @@ import org.springframework.security.web.context.HttpSessionSecurityContextReposi
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
+import javax.servlet.ServletRequest;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -205,7 +206,13 @@ public class SecurityUtil {
     /**
      * 根据rememberMeCookie查询获取数据表中的信息
      */
-    public PersistentRememberMeToken rememberMeGetTokenForSeries(Cookie rememberMeCookie) {
+    public PersistentRememberMeToken rememberMeGetTokenForSeries(ServletRequest servletRequest, Cookie rememberMeCookie) {
+        HttpServletRequest req = (HttpServletRequest) servletRequest;
+        String token = req.getHeader("token");
+        PersistentRememberMeToken tok = persistentTokenRepository.getTokenForSeries(token);
+        if (tok != null) {
+            return tok;
+        }
         return rememberMeCookie == null ? null : persistentTokenRepository.getTokenForSeries(SecurityUtil.decodeCookie(rememberMeCookie.getValue())[0]);
     }
 
@@ -273,18 +280,22 @@ public class SecurityUtil {
     /**
      * 创建remember-me相关数据
      */
-    public void addRememberMe(HttpServletRequest request, HttpServletResponse response, String username) {
-        PersistentRememberMeToken persistentToken = new PersistentRememberMeToken(username, myPersistentTokenBasedRememberMeServices.generateSeriesData(), myPersistentTokenBasedRememberMeServices.generateTokenData(), new Date());
+    public String addRememberMe(HttpServletRequest request, HttpServletResponse response, String username) {
+        String token = myPersistentTokenBasedRememberMeServices.generateTokenData();
+        PersistentRememberMeToken persistentToken = new PersistentRememberMeToken(username, token, token, new Date());
         persistentTokenRepository.createNewToken(persistentToken);
         myPersistentTokenBasedRememberMeServices.addCookie(persistentToken, request, response);
+        return persistentToken.getTokenValue();
     }
 
     /**
      * 更新remember-me相关数据
      */
     public void updateRememberMeByToken(HttpServletRequest request, HttpServletResponse response, PersistentRememberMeToken token) {
-        PersistentRememberMeToken newToken = new PersistentRememberMeToken(token.getUsername(), token.getSeries(), myPersistentTokenBasedRememberMeServices.generateTokenData(), new Date());
-        persistentTokenRepository.updateToken(newToken.getSeries(), newToken.getTokenValue(), newToken.getDate());
+        String tokenstr = myPersistentTokenBasedRememberMeServices.generateTokenData();
+        persistentTokenRepository.removeUserTokens(token.getUsername());
+        PersistentRememberMeToken newToken = new PersistentRememberMeToken(token.getUsername(), tokenstr, tokenstr, new Date());
+        persistentTokenRepository.createNewToken(newToken);
         myPersistentTokenBasedRememberMeServices.addCookie(newToken, request, response);
     }
 

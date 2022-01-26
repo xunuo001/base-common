@@ -1,5 +1,6 @@
 package cn.huanzi.qch.baseadmin.author;
 
+import cn.huanzi.qch.baseadmin.common.pojo.Result;
 import cn.huanzi.qch.baseadmin.config.security.UserDetailsServiceImpl;
 import cn.huanzi.qch.baseadmin.constant.Constants;
 import cn.huanzi.qch.baseadmin.sys.sysuser.service.SysUserService;
@@ -8,6 +9,7 @@ import cn.huanzi.qch.baseadmin.sys.sysuserauthority.service.SysUserAuthorityServ
 import cn.huanzi.qch.baseadmin.sys.sysuserauthority.vo.SysUserAuthorityVo;
 import cn.huanzi.qch.baseadmin.util.SecurityUtil;
 import cn.huanzi.qch.baseadmin.util.UUIDUtil;
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.xkcoding.http.config.HttpConfig;
 import lombok.extern.slf4j.Slf4j;
@@ -59,22 +61,22 @@ public class RestAuthController {
     @Autowired
     private SysUserAuthorityService sysUserAuthorityService;
 
-    @RequestMapping("/render")
-    @ResponseBody
-    public void renderAuth(HttpServletResponse response) throws IOException {
-        log.info("进入render");
-        AuthRequest authRequest = getAuthRequest();
-        String authorizeUrl = authRequest.authorize(AuthStateUtils.createState());
-        log.info(authorizeUrl);
-        response.sendRedirect(authorizeUrl);
-    }
+//    @RequestMapping("/render/{code}")
+//    @ResponseBody
+//    public void renderAuth(@PathVariable("code") String code,HttpServletResponse response) throws IOException {
+//        log.info("进入render");
+//        AuthRequest authRequest = getAuthRequest();
+//        String authorizeUrl = authRequest.authorize(AuthStateUtils.createState());
+//        log.info(authorizeUrl);
+//        response.sendRedirect(authorizeUrl);
+//    }
 
     /**
      * oauth平台中配置的授权回调地址，以本项目为例，在创建github授权应用时的回调地址应为：http://127.0.0.1:8443/oauth/callback/github
      */
-    @RequestMapping("/callback")
-    public ModelAndView login(AuthCallback callback, HttpServletRequest request, HttpServletResponse resp) {
-
+    @RequestMapping("/login")
+    public Result<String> login(AuthCallback callback, HttpServletRequest request, HttpServletResponse resp) {
+        log.info(JSONObject.toJSONString(callback));
         AuthRequest authRequest = getAuthRequest();
         AuthResponse<AuthUser> response = authRequest.login(callback);
         log.info(JSONObject.toJSONString(response));
@@ -114,19 +116,19 @@ public class RestAuthController {
             session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, securityContext);
 
             //更新token信息
-            securityUtil.addRememberMe(request, resp, authUser.getUsername());
+            String token=securityUtil.addRememberMe(request, resp, authUser.getUsername());
 
             //最后登录时间
             SysUserVo sysUserVo = sysUserService.findByLoginName(user.getUsername()).getData();
             sysUserVo.setLastLoginTime(new Date());
             sysUserService.save(sysUserVo);
-            return new ModelAndView("redirect:/index");
+            return Result.of("token",true,"");
         }
 
         Map<String, Object> map = new HashMap<>(1);
         map.put("errorMsg", response.getMsg());
 
-        return new ModelAndView("error", map);
+        return Result.of(null,false,response.getMsg());
     }
 
 
@@ -139,7 +141,6 @@ public class RestAuthController {
         return new AuthWeChatOpenRequest(AuthConfig.builder()
                 .clientId(Constants.wxClientId)
                 .clientSecret(Constants.wxSecurityId)
-                .redirectUri("http://magicface.xyz:8888/oauth/callback")
                 .build());
     }
 }

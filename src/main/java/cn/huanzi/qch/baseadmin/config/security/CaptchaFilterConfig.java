@@ -67,7 +67,7 @@ public class CaptchaFilterConfig implements Filter {
         if(user == null && rememberMeCookie != null){
 
             //remember me？
-            PersistentRememberMeToken token = securityUtil.rememberMeGetTokenForSeries(rememberMeCookie);
+            PersistentRememberMeToken token = securityUtil.rememberMeGetTokenForSeries(servletRequest,rememberMeCookie);
 
             /*
                 不允许自动登录
