@@ -12,4 +12,5 @@ public class VCoinIncrHistoryVo implements Serializable {
     private Long coinNum;
     private String type;
     private Date createTime;
+    private String operationName;
 }

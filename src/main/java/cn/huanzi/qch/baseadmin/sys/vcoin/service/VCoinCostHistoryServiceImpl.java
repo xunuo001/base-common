@@ -44,6 +44,7 @@ public class VCoinCostHistoryServiceImpl extends CommonServiceImpl<VCoinCostHist
         currentCoin.setCoinNum(vCoinVo.getCoinNum());
         currentCoin.setCreateTime(new Date());
         currentCoin.setType(vCoinVo.getType());
+        currentCoin.setOperationName(SecurityUtil.getLoginUser().getUsername());
         user.setCoinNum(user.getCoinNum() - vCoinVo.getCoinNum());
         sysUserService.save(user);
         return save(currentCoin);

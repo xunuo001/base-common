@@ -171,6 +171,7 @@ CREATE TABLE `vcoin_incr_history`
     `coin_num`    varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '菜单id',
     `create_time` datetime   NOT NULL COMMENT '创建时间',
     `type`     varchar(25) CHARACTER SET utf8 COLLATE utf8_general_ci  NOT NULL COMMENT '消费类型',
+    `operation_name`   varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '操作人',
     PRIMARY KEY (`id`) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '虚拟币表' ROW_FORMAT = Compact;
 
@@ -182,6 +183,7 @@ CREATE TABLE `vcoin_cost_history`
     `coin_num` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT 'coin',
     `create_time`     datetime                                                NOT NULL COMMENT '消费时间',
     `type`     varchar(25) CHARACTER SET utf8 COLLATE utf8_general_ci  NOT NULL COMMENT '消费类型',
+    `operation_name`   varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '操作人',
     PRIMARY KEY (`id`) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '消费历史表' ROW_FORMAT = Compact;
 

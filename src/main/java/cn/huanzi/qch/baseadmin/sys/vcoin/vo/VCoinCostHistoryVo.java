@@ -15,4 +15,5 @@ public class VCoinCostHistoryVo extends PageCondition implements Serializable {
     private Long coinNum;
     private String type;
     private Date createTime;
+    private String operationName;
 }

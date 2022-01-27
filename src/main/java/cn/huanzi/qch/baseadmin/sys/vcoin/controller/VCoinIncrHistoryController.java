@@ -66,7 +66,7 @@ public class VCoinIncrHistoryController extends CommonController<VCoinIncrHistor
         }
         Date preDate = vCoinIncrHistoryRepositroy.querybyUsernameAndType(userName, vCoinVo.getType());
         boolean isInTime = compareTime(preDate);
-        if ("fat".equals(vCoinVo.getType()) && (!isInTime)) {
+        if ("fat".equals(vCoinVo.getType()) && (isInTime)) {
             return Result.of(null, false, "已经增加过该类型虚拟币");
         }
         VCoinIncrHistoryVo currentCoin = new VCoinIncrHistoryVo();
@@ -75,6 +75,7 @@ public class VCoinIncrHistoryController extends CommonController<VCoinIncrHistor
         currentCoin.setCoinNum(vCoinVo.getCoinNum());
         currentCoin.setCreateTime(new Date());
         currentCoin.setType(vCoinVo.getType());
+        currentCoin.setOperationName(SecurityUtil.getLoginUser().getUsername());
         user.setCoinNum(user.getCoinNum() + vCoinVo.getCoinNum());
         sysUserService.save(user);
         return vcoinService.save(currentCoin);
@@ -86,7 +87,7 @@ public class VCoinIncrHistoryController extends CommonController<VCoinIncrHistor
         }
         long pre = date.getTime();
         long cur = new Date().getTime();
-        return ((cur - pre )> time);
+        return ((cur - pre )< time);
     }
 
 

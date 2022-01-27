@@ -45,6 +45,7 @@ layui.use(['element', 'form', 'table', 'layer', 'laydate', 'tree', 'util'], func
             , {field: 'type', title: '消费类型'}
             , {field: 'coinNum', title: '消费数量'}
             , {field: 'createTime', title: '消费时间'}
+            , {field: 'operationName', title: '操作人'}
         ]]
         , defaultToolbar: ['', '', '']
         , page: true

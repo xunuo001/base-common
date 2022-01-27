@@ -12,16 +12,11 @@ import java.util.Date;
 @Table(name = "vcoin_incr_history")
 @Data
 public class VCoinIncrHistory implements Serializable {
-    public VCoinIncrHistory(){}
-    public VCoinIncrHistory(String userName,String type,Date createTime){
-        this.userName=userName;
-        this.type=type;
-        this.createTime=createTime;
-    }
     @Id
     private String id;
     private String userName;
     private Long coinNum;
     private Date createTime;
     private String type;
+    private String operationName;
 }

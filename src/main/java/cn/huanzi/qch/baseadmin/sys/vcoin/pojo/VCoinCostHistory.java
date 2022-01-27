@@ -18,4 +18,5 @@ public class VCoinCostHistory implements Serializable {
     private Long coinNum;
     private Date createTime;
     private String type;
+    private String operationName;
 }
