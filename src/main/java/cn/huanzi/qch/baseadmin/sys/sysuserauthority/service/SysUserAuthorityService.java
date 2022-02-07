@@ -11,4 +11,5 @@ public interface SysUserAuthorityService extends CommonService<SysUserAuthorityV
     Result<List<SysUserAuthorityVo>> findByUserId(String userId);
 
     Result<Boolean> saveAllByUserId(String userId, String authorityIdList);
+    Result<SysUserAuthorityVo> txSave(SysUserAuthorityVo vo);
 }

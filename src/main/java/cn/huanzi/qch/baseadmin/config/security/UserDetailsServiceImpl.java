@@ -47,4 +47,17 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         // 封装用户信息，并返回。参数分别是：用户名，密码，用户权限
         return new User(sysUserVo.getLoginName(), sysUserVo.getPassword(), AuthorityUtils.commaSeparatedStringToAuthorityList(authorityList.toString()));
     }
+
+    public UserDetails loadWxUserByUsername(String username) throws UsernameNotFoundException {
+        //查询用户
+        SysUserVo sysUserVo = sysUserService.findByLoginName(username).getData();
+        //查无此用户
+        if(StringUtils.isEmpty(sysUserVo.getUserId())){
+            sysUserVo.setLoginName("查无此用户");
+            sysUserVo.setPassword("查无此用户");
+        }
+
+        // 封装用户信息，并返回。参数分别是：用户名，密码，用户权限
+        return new User(sysUserVo.getLoginName(), sysUserVo.getPassword(), AuthorityUtils.commaSeparatedStringToAuthorityList("ROLE_USER"));
+    }
 }

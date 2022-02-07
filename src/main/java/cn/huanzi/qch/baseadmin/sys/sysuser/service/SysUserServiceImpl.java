@@ -124,6 +124,12 @@ public class SysUserServiceImpl extends CommonServiceImpl<SysUserVo, SysUser, St
     }
 
     @Override
+    @Transactional
+    public Result<SysUserVo> txSave(SysUserVo vo) {
+        return save(vo);
+    }
+
+    @Override
     public Result<SysUserVo> findByLoginName(String username) {
         return Result.of(CopyUtil.copy(sysUserRepository.findByLoginName(username), SysUserVo.class));
     }

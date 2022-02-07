@@ -7,6 +7,8 @@ import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.message.BasicHeader;
@@ -26,6 +28,36 @@ import java.util.Map;
  */
 @Slf4j
 public class HttpClientUtil {
+    public static String sendGet(String url, Map<String, Object> params) throws Exception{
+        if(params !=null && !params.isEmpty()){
+
+            List<NameValuePair> pairs = new ArrayList<NameValuePair>(params.size());
+
+            for (String key :params.keySet()){
+                pairs.add(new BasicNameValuePair(key, params.get(key).toString()));
+            }
+            url +="?"+EntityUtils.toString(new UrlEncodedFormEntity(pairs), "UTF-8");
+        }
+
+        HttpClient httpClient = HttpClientFactory.getInstance().getHttpClient();
+        HttpGet httpGet = new HttpGet(url);
+        HttpResponse response = httpClient.execute(httpGet);
+        int statusCode = response.getStatusLine().getStatusCode();
+        if(statusCode !=200){
+            httpGet.abort();
+            throw new RuntimeException("HttpClient,error status code :" + statusCode);
+        }
+        HttpEntity entity = response.getEntity();
+        String result = null;
+        if (entity != null) {
+            result = EntityUtils.toString(entity, "utf-8");
+            EntityUtils.consume(entity);
+//            response.close();
+            return result;
+        }else{
+            return null;
+        }
+    }
 
     /**
      * 通过post方式调用http接口

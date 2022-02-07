@@ -44,4 +44,10 @@ public class SysUserAuthorityServiceImpl extends CommonServiceImpl<SysUserAuthor
         }
         return Result.of(true);
     }
+
+    @Override
+    @Transactional
+    public Result<SysUserAuthorityVo> txSave(SysUserAuthorityVo vo) {
+        return save(vo);
+    }
 }
