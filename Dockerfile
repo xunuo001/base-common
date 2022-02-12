@@ -1,4 +1,4 @@
-FROM java:8
+FROM openjdk:8u312-jdk
 
 COPY start.sh /start.sh
 RUN chmod 777 /start.sh

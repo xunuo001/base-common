@@ -145,11 +145,11 @@ public class SecurityUtil {
             flag = true;
         }
 
-        //禁止多人在线
-        if ("N".equals(sysUserVo.getLimitMultiLogin()) && sessionRegistryGetUserByUserName(userName) != null) {
-            msg = "{\"code\":\"400\",\"msg\":\"该账号禁止多人在线，请联系管理员\"}";
-            flag = true;
-        }
+//        //禁止多人在线
+//        if ("N".equals(sysUserVo.getLimitMultiLogin()) && sessionRegistryGetUserByUserName(userName) != null) {
+//            msg = "{\"code\":\"400\",\"msg\":\"该账号禁止多人在线，请联系管理员\"}";
+//            flag = true;
+//        }
 
         //超出有效时间
         if (!StringUtils.isEmpty(sysUserVo.getExpiredTime()) && System.currentTimeMillis() > sysUserVo.getExpiredTime().getTime()) {
@@ -159,6 +159,8 @@ public class SecurityUtil {
             //清除remember-me持久化token，删除所有
             this.rememberMeRemoveUserTokensByUserName(userName);
         }
+
+
 
         //禁止登陆系统
         if ("N".equals(sysUserVo.getValid())) {
@@ -292,9 +294,8 @@ public class SecurityUtil {
      * 更新remember-me相关数据
      */
     public void updateRememberMeByToken(HttpServletRequest request, HttpServletResponse response, PersistentRememberMeToken token) {
-        String tokenstr = myPersistentTokenBasedRememberMeServices.generateTokenData();
         persistentTokenRepository.removeUserTokens(token.getUsername());
-        PersistentRememberMeToken newToken = new PersistentRememberMeToken(token.getUsername(), tokenstr, tokenstr, new Date());
+        PersistentRememberMeToken newToken = new PersistentRememberMeToken(token.getUsername(), token.getSeries(), token.getTokenValue(), new Date());
         persistentTokenRepository.createNewToken(newToken);
         myPersistentTokenBasedRememberMeServices.addCookie(newToken, request, response);
     }

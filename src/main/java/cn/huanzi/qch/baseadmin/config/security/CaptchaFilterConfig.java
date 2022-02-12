@@ -33,7 +33,7 @@ import java.util.HashMap;
 @Component
 @Slf4j
 public class CaptchaFilterConfig implements Filter {
-
+    private final long wxExpiredTime =1*24*60*60*1000L;
     @Value("${captcha.enable}")
     private Boolean captchaEnable;
 
@@ -62,29 +62,46 @@ public class CaptchaFilterConfig implements Filter {
 
             另外，虽然重启了服务，sessionRegistry.getAllSessions()为空，但之前的用户session未过期同样能访问系统，也是这个原因
          */
+        boolean flag1 = !SecurityUtil.checkUrl(requestUri.replaceFirst(contextPath, ""));
         User user = securityUtil.sessionRegistryGetUserBySessionId(session.getId());
         Cookie rememberMeCookie = SecurityUtil.getRememberMeCookie(request);
-        if(user == null && rememberMeCookie != null){
+        String tokenstr = request.getHeader("token");
+        if(user == null && (rememberMeCookie != null||tokenstr!=null)){
 
             //remember me？
             PersistentRememberMeToken token = securityUtil.rememberMeGetTokenForSeries(servletRequest,rememberMeCookie);
+            boolean flag0 = StringUtils.isEmpty(token);
+            if(org.apache.commons.lang3.StringUtils.isNotEmpty(tokenstr)){
+                //登录过期
 
+                if (flag0) {
+                    Result<String> res = Result.of(10001,tokenstr,false,"登录信息不存在");
+                    HttpServletResponseUtil.printJson(response,JsonUtil.stringify(res));
+                    return;
+                }else if ((System.currentTimeMillis()-token.getDate().getTime()) > wxExpiredTime) {
+                    Result<String> res = Result.of(10001,tokenstr,false,"登录已过期");
+                    HttpServletResponseUtil.printJson(response,JsonUtil.stringify(res));
+                    //清除remember-me持久化token，删除所有
+                    securityUtil.rememberMeRemoveUserTokensByUserName(token.getUsername());
+                    return;
+                }
+            }
             /*
                 不允许自动登录
                 查无token令牌
                 当前URL需要登录才能访问，但当前账号不满足登录限制（七天免登陆、禁止多人在线等登录限制有冲突）
              */
-            boolean flag0 = StringUtils.isEmpty(token);
-            boolean flag1 = !SecurityUtil.checkUrl(requestUri.replaceFirst(contextPath, ""));
+
             boolean flag2 = !flag0 && Boolean.valueOf(securityUtil.checkUserByUserData(request, token.getUsername()).get("flag").toString());
             if(flag0 || (flag1 && flag2)){
                 log.info("访问{}，尝试自动登录失败，查无token令牌或当前账号不满足登录限制...",requestUri);
+
                 HttpServletResponseUtil.printHtml(response,"<script type='text/javascript'>window.location.href = '" + contextPath + "/logout'</script>");
                 return;
             }
 
             if(flag1) {
-                log.info("访问{}，当前session连接开启了免登陆，已自动登录！token：{},userName：{}，最后登录时间：{}",requestUri,rememberMeCookie.getValue(),token.getUsername(),token.getDate());
+//                log.info("访问{}，当前session连接开启了免登陆，已自动登录！token：{},userName：{}，最后登录时间：{}",requestUri,rememberMeCookie.getValue(),token.getUsername(),token.getDate());
                 //注册新的session
                 securityUtil.sessionRegistryAddUser(session.getId(), userDetailsServiceImpl.loadUserByUsername(token.getUsername()));
 

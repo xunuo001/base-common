@@ -117,6 +117,7 @@ CREATE TABLE `sys_user`
     `company`              varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci COMMENT '公司',
     `location`             varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci COMMENT '地点',
     `email`                varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci COMMENT '邮箱',
+    `avatar_url`           varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci COMMENT '头像',
     `password`             varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '登录密码',
     `valid`                char(1) CHARACTER SET utf8 COLLATE utf8_general_ci      NOT NULL COMMENT '软删除标识，Y/N',
     `limited_ip`           varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '限制允许登录的IP集合',

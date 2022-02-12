@@ -48,14 +48,14 @@ public class VCoinIncrHistoryController extends CommonController<VCoinIncrHistor
     @PostMapping("/increase")
     @Decrypt
     @Encrypt
-    public Result<VCoinIncrHistoryVo> increase(VCoinIncrHistoryVo vCoinVo) {
+    public Result<VCoinIncrHistoryVo> increase(@RequestBody VCoinIncrHistoryVo vCoinVo) {
         return incr(vCoinVo.getId(), vCoinVo);
     }
 
     @PostMapping("")
     @Decrypt
     @Encrypt
-    public Result<VCoinIncrHistoryVo> increaseSelf(VCoinIncrHistoryVo vCoinVo) {
+    public Result<VCoinIncrHistoryVo> increaseSelf(@RequestBody VCoinIncrHistoryVo vCoinVo) {
         return incr(SecurityUtil.getLoginUser().getUsername(), vCoinVo);
     }
 
@@ -72,11 +72,11 @@ public class VCoinIncrHistoryController extends CommonController<VCoinIncrHistor
         VCoinIncrHistoryVo currentCoin = new VCoinIncrHistoryVo();
         currentCoin.setId(UUIDUtil.getUuid());
         currentCoin.setUserName(user.getLoginName());
-        currentCoin.setCoinNum(vCoinVo.getCoinNum());
+        currentCoin.setCoinNum(vCoinVo.getCoinNum()==null?1:vCoinVo.getCoinNum());
         currentCoin.setCreateTime(new Date());
         currentCoin.setType(vCoinVo.getType());
         currentCoin.setOperationName(SecurityUtil.getLoginUser().getUsername());
-        user.setCoinNum(user.getCoinNum() + vCoinVo.getCoinNum());
+        user.setCoinNum(user.getCoinNum() + (vCoinVo.getCoinNum()==null?1:vCoinVo.getCoinNum()));
         sysUserService.save(user);
         return vcoinService.save(currentCoin);
     }

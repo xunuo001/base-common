@@ -18,6 +18,7 @@ public class Result<T> implements Serializable {
      * 通信状态
      */
     private boolean flag = true;
+    private int code = 200;
     /**
      * 通信描述
      */
@@ -37,7 +38,9 @@ public class Result<T> implements Serializable {
     public static <T> Result<T> of(T data, boolean flag, String msg) {
         return new Result<>(data, flag, msg);
     }
-
+    public static <T> Result<T> of(int code,T data, boolean flag, String msg) {
+        return new Result<>(data,code, flag, msg);
+    }
     @Deprecated
     public Result() {
 
@@ -56,6 +59,14 @@ public class Result<T> implements Serializable {
         this.data = data;
         this.flag = flag;
         this.msg = msg;
+        if(!flag){
+            this.code=500;
+        }
     }
-
+    private Result(T data,int code,boolean flag, String msg) {
+        this.data = data;
+        this.flag = flag;
+        this.msg = msg;
+        this.code=code;
+    }
 }

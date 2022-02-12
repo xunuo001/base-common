@@ -46,7 +46,7 @@ public class OpenApiAspect {
         if(rateLimiter.execute()){
             return pjp.proceed(pjp.getArgs());
         }else{
-            return Result.of(10001,false,"API接口繁忙，请稍后再试！");
+            return Result.of(30001,false,"API接口繁忙，请稍后再试！");
         }
     }
 }

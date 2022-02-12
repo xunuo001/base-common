@@ -43,14 +43,14 @@ public class VCoinCostHistoryController extends CommonController<VCoinCostHistor
     @PostMapping("")
     @Decrypt
     @Encrypt
-    public Result<VCoinCostHistoryVo> cost(VCoinCostHistoryVo vCoinHistoryVo) {
+    public Result<VCoinCostHistoryVo> cost(@RequestBody VCoinCostHistoryVo vCoinHistoryVo) {
         return vCoinCostHistroyService.cost(vCoinHistoryVo.getUserName(),vCoinHistoryVo);
     }
 
     @GetMapping("pages")
     @Decrypt
     @Encrypt
-    public Result<PageInfo<VCoinCostHistoryVo>> pages(VCoinCostHistoryVo entityVo) {
+    public Result<PageInfo<VCoinCostHistoryVo>> pages(@RequestBody VCoinCostHistoryVo entityVo) {
         entityVo.setUserName(SecurityUtil.getLoginUser().getUsername());
         return super.page(entityVo);
     }

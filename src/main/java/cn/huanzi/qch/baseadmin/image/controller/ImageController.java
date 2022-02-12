@@ -45,6 +45,7 @@ public class ImageController {
     private String pipeUrl;
     @Value("${pipe.path}")
     private String pipePath;
+
     @PostMapping("/base64")
     public Result<ImageVo> getImages(@RequestParam(value = "file") MultipartFile file,
                                      @RequestParam(value = "type") String type) throws Exception {
@@ -56,33 +57,40 @@ public class ImageController {
         vCoinVo.setCoinNum(1L);
         vCoinVo.setUserName(SecurityUtil.getLoginUser().getUsername());
         vCoinVo.setType(type);
-        Result<VCoinCostHistoryVo> res = vCoinCostHistroyService.cost(SecurityUtil.getLoginUser().getUsername(), vCoinVo);
-        ImageVo image = new ImageVo();
-        if (res.isFlag()) {
-            image.setBase64(getBase64(type, Base64Utils.encode(file.getBytes())));
-            image.setCoinNum(sysUserService.findByLoginName(SecurityUtil.getLoginUser().getUsername()).getData().getCoinNum());
+        try {
+            ImageVo image = new ImageVo();
+            String output = getBase64(type, Base64Utils.encode(file.getBytes()));
+            image.setBase64(output);
+            Result<VCoinCostHistoryVo> res = vCoinCostHistroyService.cost(SecurityUtil.getLoginUser().getUsername(), vCoinVo);
+            if (res.isFlag()) {
+                image.setCoinNum(sysUserService.findByLoginName(SecurityUtil.getLoginUser().getUsername()).getData().getCoinNum());
+                return Result.of(image, res.isFlag(), res.getMsg());
+            }
+            return Result.of(null, res.isFlag(), res.getMsg());
+        } catch (Exception e) {
+            return Result.of(null, false, e.getMessage());
         }
-        return Result.of(image, res.isFlag(), res.getMsg());
+
     }
 
     private String getBase64(String type, String input) throws Exception {
         Map<String, String> params = new HashMap<>();
         params.put("imgdata", input);
-        String output= HttpClientUtil.sendPostByForm(pipeUrl, params, 3);
-        File file =new File(pipePath,SecurityUtil.getLoginUser().getUsername());
-        file.mkdir();
-        String id= UUIDUtil.getUuid();
-        File inputFile=new File(file,id+"_input.jpg");
-        generateImage(input,inputFile.getAbsolutePath());
-        File outputFile=new File(file,id+"_output.jpg");
-        generateImage(output,outputFile.getAbsolutePath());
+        String output = HttpClientUtil.sendPostByForm(pipeUrl, params, 3);
+        File file = new File(pipePath, SecurityUtil.getLoginUser().getUsername());
+        file.mkdirs();
+        String id = UUIDUtil.getUuid();
+        File inputFile = new File(file, id + "_input.jpg");
+        generateImage(input, inputFile.getAbsolutePath());
+        File outputFile = new File(file, id + "_output.jpg");
+        generateImage(output, outputFile.getAbsolutePath());
         return output;
     }
 
     @SuppressWarnings("finally")
-    public static void generateImage(String imgData, String imgFilePath) throws IOException { // 对字节数组字符串进行Base64解码并生成图片
+    public static void generateImage(String imgData, String imgFilePath) throws Exception { // 对字节数组字符串进行Base64解码并生成图片
         if (imgData == null) // 图像数据为空
-            return ;
+            return;
         BASE64Decoder decoder = new BASE64Decoder();
         OutputStream out = null;
         try {
@@ -96,10 +104,13 @@ public class ImageController {
             }
             out.write(b);
         } catch (Exception e) {
-            log.error("generator image error",e);
+            log.error("generator image error", e);
+            throw e;
         } finally {
-            out.flush();
-            out.close();
+            if (out != null) {
+                out.flush();
+                out.close();
+            }
         }
     }
 }

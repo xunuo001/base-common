@@ -26,7 +26,7 @@ public class SysUser implements Serializable {
     private String email;
     private Long coinNum;
     private String valid;//软删除标识，Y/N
-
+    private String avatarUrl;
     private String limitedIp;//限制允许登录的IP集合
 
     private Date expiredTime;//账号失效时间，超过时间将不能登录系统

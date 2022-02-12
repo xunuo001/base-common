@@ -43,10 +43,7 @@ import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 @Slf4j
 @RestController
@@ -65,25 +62,28 @@ public class RestAuthController {
     @RequestMapping("/render")
     @ResponseBody
     public void renderAuth(HttpServletResponse response) throws IOException {
-        UserDetails user= userDetailsServiceImpl.loadUserByUsername("o99ZG5UHctMbsd0XRKefAlxw3KrA");
+        UserDetails user = userDetailsServiceImpl.loadUserByUsername("o99ZG5UHctMbsd0XRKefAlxw3KrA");
         System.out.println(user);
     }
 
     /**
      * oauth平台中配置的授权回调地址，以本项目为例，在创建github授权应用时的回调地址应为：http://127.0.0.1:8443/oauth/callback/github
      */
-    @RequestMapping(value = "/login")
-    public Result<String> login(Auth auth, HttpServletRequest request, HttpServletResponse resp) throws Exception {
+    @RequestMapping(value = "/login",method = RequestMethod.POST)
+    public Result<LoginResult> login(@RequestBody Auth auth, HttpServletRequest request, HttpServletResponse resp) throws Exception {
         log.info(JSONObject.toJSONString(auth));
         String res = HttpClientUtil.sendGet("https://api.weixin.qq.com/sns/jscode2session", getRequestParams(auth.getCode()));
         Map<String, String> json = (Map) JSONObject.parse(res);
         AuthCallback callback = new AuthCallback();
         callback.setCode(auth.getCode());
-        String code =json.get("errmsg");
-        if(StringUtils.isNotEmpty(json.get("errmsg"))){
-            return Result.of(null,false,json.get("errmsg"));
+        String errmsg = json.get("errmsg");
+        LoginResult result = new LoginResult();
+        if (StringUtils.isNotEmpty(errmsg)) {
+            result.setMsg(errmsg);
+            result.setCode(-1);
+            return Result.of(result, false, errmsg);
         }
-        String userId=json.get("openid");
+        String userId = json.get("openid");
         SysUserVo userVo = sysUserService.findByLoginName(json.get("openid")).getData();
         if (userVo == null || userVo.getUserId() == null) {
             Date now = new Date();
@@ -91,11 +91,12 @@ public class RestAuthController {
             userVo.setUserId(userId);
             userVo.setLoginName(userId);
             userVo.setUserName(auth.getNickName() == null ? UUIDUtil.getUuid() : auth.getNickName());
+            userVo.setAvatarUrl(auth.getAvatarUrl() == null ? "" : auth.getAvatarUrl());
             userVo.setCreateTime(now);
             userVo.setNewPassword("weixin");
             userVo.setPassword("weixin");
-            userVo.setCoinNum(0L);
-            userVo.setValid("N");
+            userVo.setCoinNum(100L);
+            userVo.setValid("Y");
             userVo.setLastLoginTime(now);
             userVo.setLimitMultiLogin("N");
             userVo.setCreateTime(now);
@@ -127,9 +128,17 @@ public class RestAuthController {
 
         //最后登录时间
         SysUserVo sysUserVo = sysUserService.findByLoginName(userVo.getLoginName()).getData();
-        sysUserVo.setLastLoginTime(new Date());
+        Date date = new Date();
+        sysUserVo.setLastLoginTime(date);
         sysUserService.txSave(sysUserVo);
-        return Result.of(res, true, "");
+        result.setCode(0);
+        result.setMsg("succ");
+        result.setNickeName(sysUserVo.getUserName());
+        result.setUserId(sysUserVo.getUserId());
+        result.setCoinNum(sysUserVo.getCoinNum());
+        result.setToken(token);
+        result.setAvatarUrl(sysUserVo.getAvatarUrl());
+        return Result.of(result, true, "");
     }
 
     private Map<String, Object> getRequestParams(String code) {

@@ -126,7 +126,7 @@ public class HttpClientUtil {
      * @return
      * @throws Exception
      */
-    public static String sendPostByForm(String url, Map<String,String> map,int reSend) {
+    public static String sendPostByForm(String url, Map<String,String> map,int reSend)throws Exception {
         //声明返回结果
         String result = "";
         //开始请求API接口时间
@@ -165,6 +165,7 @@ public class HttpClientUtil {
                     return result;
                 }
             }
+            throw e;
         }finally {
             try {
                 EntityUtils.consume(httpEntity);

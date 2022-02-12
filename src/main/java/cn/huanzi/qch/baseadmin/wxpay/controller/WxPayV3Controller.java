@@ -1,6 +1,8 @@
 package cn.huanzi.qch.baseadmin.wxpay.controller;
 
+import cn.huanzi.qch.baseadmin.common.pojo.Result;
 import cn.huanzi.qch.baseadmin.util.CommonUtil;
+import cn.huanzi.qch.baseadmin.util.SecurityUtil;
 import cn.huanzi.qch.baseadmin.wxpay.domain.ResponseInfo;
 import cn.huanzi.qch.baseadmin.wxpay.domain.WxPayV3Bean;
 import cn.hutool.core.io.FileUtil;
@@ -20,10 +22,12 @@ import com.ijpay.core.utils.DateTimeZoneUtil;
 import com.ijpay.wxpay.WxPayApi;
 import com.ijpay.wxpay.enums.WxApiType;
 import com.ijpay.wxpay.enums.WxDomain;
+import com.ijpay.wxpay.model.OrderQueryModel;
 import com.ijpay.wxpay.model.v3.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -45,7 +49,7 @@ import java.util.Map;
  * @Version 1.0
  **/
 @Controller
-@RequestMapping("/v3")
+@RequestMapping("/wxpay/v3")
 public class WxPayV3Controller {
 
     private static final Logger log = LoggerFactory.getLogger(WxPayV3Controller.class);
@@ -56,8 +60,8 @@ public class WxPayV3Controller {
     String platSerialNo;
 
     //nativePay 直连商户模式
-    @RequestMapping("/nativePay")
-    @ResponseBody
+//    @RequestMapping("/nativePay")
+//    @ResponseBody
     public String nativePay() {
         try {
             String timeExpire = DateTimeZoneUtil.dateToTimeZone(System.currentTimeMillis() + 1000 * 60 * 60);//支付有效时间
@@ -96,9 +100,10 @@ public class WxPayV3Controller {
     //jsApiPay 直连商户模式
     @RequestMapping("/jsApiPay")
     @ResponseBody
-    public String jsApiPay(@RequestParam(value = "openId", required = false, defaultValue = "oztUdwBIqk7Mmb4nxU1rc1aB8jj0") String openId) {
+    public Result<String> jsApiPay(@RequestParam(value = "amount") long amount) {
         try {
-            log.info("直连jsApi支付被调用,openId={}",openId);
+            String openId = SecurityUtil.getLoginUser().getUsername();
+            log.info("直连jsApi支付被调用,openId={}", openId);
             String timeExpire = DateTimeZoneUtil.dateToTimeZone(System.currentTimeMillis() + 1000 * 60 * 3);
             UnifiedOrderModel unifiedOrderModel = new UnifiedOrderModel()
                     .setAppid(wxPayV3Bean.getAppId())
@@ -106,8 +111,8 @@ public class WxPayV3Controller {
                     .setDescription("IJPay 让支付触手可及")
                     .setOut_trade_no(PayKit.generateStr())
                     .setTime_expire(timeExpire)
-                    .setAttach("微信系开发脚手架 https://gitee.com/javen205/TNWX")
-                    .setNotify_url(wxPayV3Bean.getDomain().concat("/v3/payNotify"))
+//                    .setAttach("微信系开发脚手架 https://gitee.com/javen205/TNWX")
+                    .setNotify_url(wxPayV3Bean.getDomain().concat("/wxpay/v3/payNotify"))
                     .setAmount(new Amount().setTotal(1))
                     .setPayer(new Payer().setOpenid(openId));
 
@@ -132,18 +137,26 @@ public class WxPayV3Controller {
                 String prepayId = jsonObject.getStr("prepay_id");
                 Map<String, String> map = WxPayKit.jsApiCreateSign(wxPayV3Bean.getAppId(), prepayId, wxPayV3Bean.getKeyPath());
                 log.info("唤起支付参数:{}", map);
-                return JSONUtil.toJsonStr(map);
+                return Result.of(JSONUtil.toJsonStr(map),true);
             }
-            return response.getBody();
+            return Result.of(response.getBody(),false,"签名验证失败");
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("下单响应失败", e);
+            return Result.of(null, false, e.getMessage());
         }
-        return null;
     }
+//    @GetMapping("/order/query")
+//    public Result<String> queryOrder(){
+//        OrderQueryModel model = new OrderQueryModel()
+//        String result = WxPayApi.orderQuery();
+//        Result.of(result,true);
+//    }
+
+
 
     //h5支付 直连商户模式
-    @RequestMapping("/h5Pay")
-    @ResponseBody
+//    @RequestMapping("/h5Pay")
+//    @ResponseBody
     public ResponseInfo h5Pay(HttpServletRequest request) {
         try {
             String timeExpire = DateTimeZoneUtil.dateToTimeZone(System.currentTimeMillis() + 1000 * 60 * 3);
@@ -182,12 +195,12 @@ public class WxPayV3Controller {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return new ResponseInfo(500,"null",null);
+        return new ResponseInfo(500, "null", null);
     }
 
     //nativePay 服务商模式
-    @RequestMapping("/nativeServicePay")
-    @ResponseBody
+//    @RequestMapping("/nativeServicePay")
+//    @ResponseBody
     public String nativeServicePay() {
         try {
             String timeExpire = DateTimeZoneUtil.dateToTimeZone(System.currentTimeMillis() + 1000 * 60 * 3);
@@ -225,19 +238,18 @@ public class WxPayV3Controller {
     }
 
     //jsApiPay 服务商模式
-    @RequestMapping("/jsApiServicePay")
-    @ResponseBody
-    public String jsApiServicePay(@RequestParam(value = "openId", required = false, defaultValue = "o-_-itxuXeGW3O1cxJ7FXNmq8Wf8") String openId) {
+//    @RequestMapping("/jsApiServicePay")
+//    @ResponseBody
+    public Result<String> jsApiServicePay(@RequestParam(value = "openId") String openId) {
         try {
             String timeExpire = DateTimeZoneUtil.dateToTimeZone(System.currentTimeMillis() + 1000 * 60 * 60);
             UnifiedOrderModel unifiedOrderModel = new UnifiedOrderModel()
                     .setSp_appid(wxPayV3Bean.getAppId())
                     .setSp_mchid(wxPayV3Bean.getMchId())
-                    .setSub_mchid("1602232807")
+//                    .setSub_mchid("1602232807")
                     .setDescription("jsApi测试支付(服务商模式)")
                     .setOut_trade_no(PayKit.generateStr())
                     .setTime_expire(timeExpire)
-                    .setAttach("微信系开发脚手架 https://gitee.com/javen205/TNWX")
                     .setNotify_url(wxPayV3Bean.getDomain().concat("/v3/payNotify"))
                     .setAmount(new Amount().setTotal(1))
                     .setPayer(new Payer().setSp_openid(openId));
@@ -264,18 +276,18 @@ public class WxPayV3Controller {
                 String prepayId = jsonObject.getStr("prepay_id");
                 Map<String, String> map = WxPayKit.jsApiCreateSign(wxPayV3Bean.getAppId(), prepayId, wxPayV3Bean.getKeyPath());
                 log.info("唤起支付参数:{}", map);
-                return JSONUtil.toJsonStr(map);
+                return Result.of(JSONUtil.toJsonStr(map), true, "");
             }
-            return response.getBody();
+            return Result.of(response.getBody(), true, "");
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("下单响应失败", e);
+            return Result.of(null, false, e.getMessage());
         }
-        return null;
     }
 
     //h5支付 服务商模式
-    @RequestMapping("/h5ServerPay")
-    @ResponseBody
+//    @RequestMapping("/h5ServerPay")
+//    @ResponseBody
     public ResponseInfo h5ServerPay() {
         try {
             String timeExpire = DateTimeZoneUtil.dateToTimeZone(System.currentTimeMillis() + 1000 * 60 * 3);
@@ -314,15 +326,16 @@ public class WxPayV3Controller {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return new ResponseInfo(500,"null",null);
+        return new ResponseInfo(500, "null", null);
     }
 
     /**
      * 获取平台证书列表
+     *
+     * @return java.lang.String
      * @Author ZhangYong
      * @Date 10:44 2020/11/10
      * @Param []
-     * @return java.lang.String
      **/
     @RequestMapping("/get")
     @ResponseBody
