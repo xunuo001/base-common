@@ -1,0 +1,9 @@
+package cn.huanzi.qch.baseadmin.wxpay.controller;
+
+import lombok.Data;
+
+@Data
+public class CallBack {
+    private String tradeState;
+    private AmountCallback amount;
+}

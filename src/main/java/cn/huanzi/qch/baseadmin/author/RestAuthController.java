@@ -95,7 +95,7 @@ public class RestAuthController {
             userVo.setCreateTime(now);
             userVo.setNewPassword("weixin");
             userVo.setPassword("weixin");
-            userVo.setCoinNum(100L);
+            userVo.setCoinNum(5L);
             userVo.setValid("Y");
             userVo.setLastLoginTime(now);
             userVo.setLimitMultiLogin("N");

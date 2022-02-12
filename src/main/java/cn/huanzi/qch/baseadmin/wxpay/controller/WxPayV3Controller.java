@@ -1,8 +1,14 @@
 package cn.huanzi.qch.baseadmin.wxpay.controller;
 
 import cn.huanzi.qch.baseadmin.common.pojo.Result;
+import cn.huanzi.qch.baseadmin.sys.sysuser.service.SysUserService;
+import cn.huanzi.qch.baseadmin.sys.sysuser.vo.SysUserVo;
+import cn.huanzi.qch.baseadmin.sys.vcoin.repository.VCoinIncrHistoryRepositroy;
+import cn.huanzi.qch.baseadmin.sys.vcoin.service.VCoinIncrHistoryService;
+import cn.huanzi.qch.baseadmin.sys.vcoin.vo.VCoinIncrHistoryVo;
 import cn.huanzi.qch.baseadmin.util.CommonUtil;
 import cn.huanzi.qch.baseadmin.util.SecurityUtil;
+import cn.huanzi.qch.baseadmin.util.UUIDUtil;
 import cn.huanzi.qch.baseadmin.wxpay.domain.ResponseInfo;
 import cn.huanzi.qch.baseadmin.wxpay.domain.WxPayV3Bean;
 import cn.hutool.core.io.FileUtil;
@@ -12,6 +18,7 @@ import cn.hutool.http.ContentType;
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
+import com.google.gson.Gson;
 import com.ijpay.core.IJPayHttpResponse;
 import com.ijpay.core.enums.RequestMethod;
 import com.ijpay.core.kit.AesUtil;
@@ -26,6 +33,7 @@ import com.ijpay.wxpay.model.OrderQueryModel;
 import com.ijpay.wxpay.model.v3.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -38,6 +46,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.cert.X509Certificate;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -51,7 +60,12 @@ import java.util.Map;
 @Controller
 @RequestMapping("/wxpay/v3")
 public class WxPayV3Controller {
-
+    @Autowired
+    private VCoinIncrHistoryService vcoinService;
+    @Autowired
+    private SysUserService sysUserService;
+    @Autowired
+    private VCoinIncrHistoryRepositroy vCoinIncrHistoryRepositroy;
     private static final Logger log = LoggerFactory.getLogger(WxPayV3Controller.class);
 
     @Resource
@@ -137,9 +151,9 @@ public class WxPayV3Controller {
                 String prepayId = jsonObject.getStr("prepay_id");
                 Map<String, String> map = WxPayKit.jsApiCreateSign(wxPayV3Bean.getAppId(), prepayId, wxPayV3Bean.getKeyPath());
                 log.info("唤起支付参数:{}", map);
-                return Result.of(JSONUtil.toJsonStr(map),true);
+                return Result.of(JSONUtil.toJsonStr(map), true);
             }
-            return Result.of(response.getBody(),false,"签名验证失败");
+            return Result.of(response.getBody(), false, "签名验证失败");
         } catch (Exception e) {
             log.error("下单响应失败", e);
             return Result.of(null, false, e.getMessage());
@@ -151,7 +165,6 @@ public class WxPayV3Controller {
 //        String result = WxPayApi.orderQuery();
 //        Result.of(result,true);
 //    }
-
 
 
     //h5支付 直连商户模式
@@ -410,6 +423,8 @@ public class WxPayV3Controller {
         return null;
     }
 
+    private Gson gson = new Gson();
+
     @RequestMapping(value = "/payNotify", method = {org.springframework.web.bind.annotation.RequestMethod.POST, org.springframework.web.bind.annotation.RequestMethod.GET})
     @ResponseBody
     public void payNotify(HttpServletRequest request, HttpServletResponse response) {
@@ -431,10 +446,12 @@ public class WxPayV3Controller {
 
             log.info("支付通知明文 {}", plainText);
 
+
             if (StrUtil.isNotEmpty(plainText)) {
                 response.setStatus(200);
                 map.put("code", "SUCCESS");
                 map.put("message", "SUCCESS");
+                saveResult(plainText);
             } else {
                 response.setStatus(500);
                 map.put("code", "ERROR");
@@ -445,6 +462,28 @@ public class WxPayV3Controller {
             response.flushBuffer();
         } catch (Exception e) {
             e.printStackTrace();
+            log.error("notify weixin error", e);
+        }
+    }
+
+    private void saveResult(String plainText) {
+        CallBack callBack = gson.fromJson(plainText, CallBack.class);
+        if ("SUCCESS".equals(callBack.getTradeState())) {
+            long num = callBack.getAmount().getPayerTotal() / 50;
+            if (num > 0) {
+                String userName = SecurityUtil.getLoginUser().getUsername();
+                SysUserVo user = sysUserService.findByLoginName(userName).getData();
+                VCoinIncrHistoryVo currentCoin = new VCoinIncrHistoryVo();
+                currentCoin.setId(UUIDUtil.getUuid());
+                currentCoin.setUserName(user.getLoginName());
+                currentCoin.setCoinNum(num);
+                currentCoin.setCreateTime(new Date());
+                currentCoin.setType("pay");
+                currentCoin.setOperationName(SecurityUtil.getLoginUser().getUsername());
+                user.setCoinNum(user.getCoinNum() + num);
+                sysUserService.save(user);
+                vcoinService.save(currentCoin);
+            }
         }
     }
 
