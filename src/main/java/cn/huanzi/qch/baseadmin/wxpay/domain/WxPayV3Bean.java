@@ -18,18 +18,18 @@ import org.springframework.stereotype.Component;
  * @author Javen
  */
 @Component
-@PropertySource("classpath:/production/wxpay_v3.properties")
-@ConfigurationProperties(prefix = "v3")
+//@PropertySource("classpath:/production/wxpay_v3.properties")
+//@ConfigurationProperties(prefix = "v3")
 public class WxPayV3Bean {
-    private String appId;
-    private String keyPath;
-    private String certPath;
-    private String certP12Path;
-    private String platformCertPath;
-    private String mchId;
-    private String apiKey;
-    private String apiKey3;
-    private String domain;
+    private String appId="wx6039cb4ab1ae383e";
+    private String keyPath="/cert/apiclient_key.pem";
+    private String certPath="/cert/apiclient_cert.pem";
+    private String certP12Path="/cert/apiclient_cert.p12";
+    private String platformCertPath="/cert/platformCert.pem";
+    private String mchId="1619729192";
+    private String apiKey="2d6e75d0f1534c208e0e6586bb0cef69";
+    private String apiKey3="184ec66a756541e5af2202823377bfd9";
+    private String domain="https://magicface.shop:443";
 
     public String getAppId() {
         return appId;

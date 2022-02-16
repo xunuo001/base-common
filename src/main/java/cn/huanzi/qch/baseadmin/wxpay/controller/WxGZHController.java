@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.ijpay.core.kit.HttpKit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -24,8 +25,7 @@ public class WxGZHController {
 
     private static final Logger log = LoggerFactory.getLogger(WxGZHController.class);
 
-    @Resource
-    WxPayV3Bean wxPayV3Bean;
+    private WxPayV3Bean wxPayV3Bean=new WxPayV3Bean();
 
     private static final String serverSuffixUrl = "/wxgzh/weixinoauth";//查询到code后重定向的目录
     private static final String stateCashout = "cashOut";

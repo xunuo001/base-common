@@ -10,6 +10,7 @@ import com.ijpay.wxpay.model.RefundQueryModel;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -34,8 +35,7 @@ public class WxPayRefundController{
 
     private static final Logger log = LoggerFactory.getLogger(WxPayV3Controller.class);
 
-    @Resource
-    WxPayV3Bean wxPayV3Bean;
+    private WxPayV3Bean wxPayV3Bean=new WxPayV3Bean();
 
     /**
      * 微信退款

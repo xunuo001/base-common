@@ -12,8 +12,13 @@ import cn.huanzi.qch.baseadmin.sys.vcoin.vo.VCoinIncrHistoryVo;
 import cn.huanzi.qch.baseadmin.util.SecurityUtil;
 import cn.huanzi.qch.baseadmin.util.UUIDUtil;
 import cn.huanzi.qch.baseadmin.util.http.HttpClientUtil;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import com.google.gson.Gson;
+import com.google.gson.JsonParser;
 import lombok.extern.slf4j.Slf4j;
 import me.zhyd.oauth.utils.Base64Utils;
+import me.zhyd.oauth.utils.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
@@ -60,6 +65,11 @@ public class ImageController {
         try {
             ImageVo image = new ImageVo();
             String output = getBase64(type, Base64Utils.encode(file.getBytes()));
+            JSONObject jsonObject = JSON.parseObject(output);
+            String error = jsonObject.getString("error");
+            if (StringUtils.isNotEmpty(error)) {
+                return Result.of(null, false, error);
+            }
             image.setBase64(output);
             Result<VCoinCostHistoryVo> res = vCoinCostHistroyService.cost(SecurityUtil.getLoginUser().getUsername(), vCoinVo);
             if (res.isFlag()) {
@@ -73,10 +83,12 @@ public class ImageController {
 
     }
 
+    private Gson gson = new Gson();
+
     private String getBase64(String type, String input) throws Exception {
         Map<String, String> params = new HashMap<>();
         params.put("imgdata", input);
-        String output = HttpClientUtil.sendPostByForm(pipeUrl, params, 3);
+        String output = HttpClientUtil.sendPostByJson(pipeUrl, gson.toJson(params), 3);
         File file = new File(pipePath, SecurityUtil.getLoginUser().getUsername());
         file.mkdirs();
         String id = UUIDUtil.getUuid();

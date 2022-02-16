@@ -35,10 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -68,8 +65,7 @@ public class WxPayV3Controller {
     private VCoinIncrHistoryRepositroy vCoinIncrHistoryRepositroy;
     private static final Logger log = LoggerFactory.getLogger(WxPayV3Controller.class);
 
-    @Resource
-    WxPayV3Bean wxPayV3Bean;
+    private WxPayV3Bean wxPayV3Bean=new WxPayV3Bean();
     String serialNo;
     String platSerialNo;
 
@@ -114,7 +110,7 @@ public class WxPayV3Controller {
     //jsApiPay 直连商户模式
     @RequestMapping("/jsApiPay")
     @ResponseBody
-    public Result<String> jsApiPay(@RequestParam(value = "amount") long amount) {
+    public Result<String> jsApiPay(@RequestBody AmountVo amount) {
         try {
             String openId = SecurityUtil.getLoginUser().getUsername();
             log.info("直连jsApi支付被调用,openId={}", openId);
@@ -127,7 +123,7 @@ public class WxPayV3Controller {
                     .setTime_expire(timeExpire)
 //                    .setAttach("微信系开发脚手架 https://gitee.com/javen205/TNWX")
                     .setNotify_url(wxPayV3Bean.getDomain().concat("/wxpay/v3/payNotify"))
-                    .setAmount(new Amount().setTotal(1))
+                    .setAmount(new Amount().setTotal(amount.getAmount()))
                     .setPayer(new Payer().setOpenid(openId));
 
             log.info("统一下单参数 {}", JSONUtil.toJsonStr(unifiedOrderModel));
@@ -353,6 +349,7 @@ public class WxPayV3Controller {
     @RequestMapping("/get")
     @ResponseBody
     public String v3Get() {
+        log.info("v3Bean: "+wxPayV3Bean.getDomain());
         // 获取平台证书列表
         try {
             IJPayHttpResponse response = WxPayApi.v3(

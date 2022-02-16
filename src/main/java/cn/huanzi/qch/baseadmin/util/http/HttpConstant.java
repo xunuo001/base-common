@@ -3,10 +3,10 @@ package cn.huanzi.qch.baseadmin.util.http;
 public class HttpConstant {
 
     /**httpClient连接超时时间,单位毫秒 */
-    public static final int CONNECT_TIMEOUT = 3*1000;
+    public static final int CONNECT_TIMEOUT = 30*1000;
 
     /**httpClient请求获取数据的超时时间(即响应时间) 单位毫秒*/
-    public static final int SOCKET_TIMEOUT = 10*1000;
+    public static final int SOCKET_TIMEOUT = 300*1000;
 
     /**http连接池大小*/
     public static final int MAX_TOTAL = 10;
@@ -15,7 +15,7 @@ public class HttpConstant {
     public static final int MAX_CONN_PER_ROUTE = 2;
 
     /**http连接是否是长连接*/
-    public static final boolean IS_KEEP_ALIVE = true;
+    public static final boolean IS_KEEP_ALIVE = false;
 
     /**调用接口失败默认重新调用次数*/
     public static final int REQ_TIMES = 3;

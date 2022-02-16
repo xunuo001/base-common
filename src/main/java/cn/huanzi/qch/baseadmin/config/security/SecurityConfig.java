@@ -62,7 +62,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             "/webjars/**",
             "/getVerifyCodeImage",
             "/error/*",
-            "/openApi/*","/oauth/**"
+            "/openApi/*","/oauth/**",
+            "/wxpay/v3/payNotify/**", "/wxpay/v3/get/**"
 //            ,"/image*","/image/**"
     };
 
